@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ─── Estado Global ───────────────────────────────────────────────────────
     let currentUser = null;
     let currentProjetoId = null;
     let currentProjetoNome = '';
@@ -14,9 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelectorAll('.nav-item[data-target]');
     const tabs = document.querySelectorAll('.tab-content');
 
-    // ─── Utilitários ─────────────────────────────────────────────────────────
+    // ─── FUNÇÕES UTILITÁRIAS (ADICIONADAS) ───────────────────────────────────
     function toast(msg, tipo = 'success') {
         const el = document.getElementById('toast');
+        if(!el) return;
         el.textContent = msg;
         el.className = `toast toast-${tipo} show`;
         setTimeout(() => el.classList.remove('show'), 3500);
@@ -31,9 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-overlay').style.display = 'none';
     }
 
-    document.getElementById('modal-overlay').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('modal-overlay')) fecharModal();
-    });
+    window.fecharModal = fecharModal;
+
+    function salvarSessao(user) {
+        const sessao = { user, timestamp: Date.now() };
+        localStorage.setItem('autoreq_session', JSON.stringify(sessao));
+    }
+
+    function limparSessao() {
+        localStorage.removeItem('autoreq_session');
+    }
 
     function badge(status) {
         const map = { 'Pendente': 'badge-warning', 'Aprovado': 'badge-success', 'Revisão': 'badge-info', 'Ativo': 'badge-success', 'Planejamento': 'badge-warning', 'Concluído': 'badge-success', 'Cancelado': 'badge-danger' };
@@ -45,36 +52,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${map[p] || ''} ${p}`;
     }
 
-    // ─── SESSÃO ───────────────────────────────────────────────────────────────
-    const SESSION_KEY = 'autoreq_session';
-
-    function salvarSessao(user) {
-        const sessao = {
-            user,
-            timestamp: Date.now()
-        };
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessao));
-    }
-
+    // ─── GESTÃO DE SESSÃO ───────────────────────────────────────────────────
     function carregarSessao() {
         try {
-            const raw = localStorage.getItem(SESSION_KEY);
+            const raw = localStorage.getItem('autoreq_session');
             if (!raw) return null;
             const sessao = JSON.parse(raw);
-            // Expirar sessão após 8 horas
             const oitoHoras = 8 * 60 * 60 * 1000;
             if (Date.now() - sessao.timestamp > oitoHoras) {
-                localStorage.removeItem(SESSION_KEY);
+                limparSessao();
                 return null;
             }
             return sessao.user;
-        } catch {
-            return null;
-        }
-    }
-
-    function limparSessao() {
-        localStorage.removeItem(SESSION_KEY);
+        } catch { return null; }
     }
 
     function iniciarApp(user) {
@@ -87,13 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
         carregarEstatisticas();
     }
 
-    // ─── Restaurar sessão ao carregar a página ────────────────────────────────
+    // ─── CONTROLE DE INICIALIZAÇÃO (CORRIGIDO) ──────────────────────────────
     const sessaoSalva = carregarSessao();
     if (sessaoSalva) {
         iniciarApp(sessaoSalva);
+    } else {
+        mainApp.style.display = 'none';
+        loginScreen.style.display = 'flex';
+        tabs.forEach(t => t.classList.remove('active'));
     }
 
-    // ─── [RF03] LOGIN ─────────────────────────────────────────────────────────
+    // ─── EVENTOS DE LOGIN ────────────────────────────────────────────────────
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('login-email').value;
@@ -115,12 +109,16 @@ document.addEventListener('DOMContentLoaded', () => {
             salvarSessao(data.user);
             iniciarApp(data.user);
         } catch {
-            // Fallback: login local se backend não tiver tabela usuarios ainda
-            const nome = email.split('@')[0].toUpperCase();
-            const user = { nome, papel: 'analista', email };
+            const user = { nome: email.split('@')[0].toUpperCase(), papel: 'analista', email };
             salvarSessao(user);
             iniciarApp(user);
         }
+    });
+
+    // ─── LOGOUT ──────────────────────────────────────────────────────────────
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        limparSessao();
+        window.location.reload();
     });
 
     // [SF03.1] – Esqueci minha senha
@@ -621,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
-    function escHtml(str) { return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+    function escHtml(str) { return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;'); }  
 
     window.fecharModal = fecharModal;
 });
