@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoReq - Sistema de Gestão</title>
+    <title>AutoReq — Gestão de Requisitos</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
@@ -15,97 +15,164 @@
 </head>
 <body>
 
-<!-- TOAST DE NOTIFICAÇÃO -->
+<!-- TOAST -->
 <div id="toast" class="toast"></div>
 
-<!-- MODAL GENÉRICO -->
+<!-- MODAL -->
 <div id="modal-overlay" class="modal-overlay" style="display:none;">
     <div class="modal-box" id="modal-box"></div>
 </div>
 
-<!-- TELA DE LOGIN -->
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<!-- ── LOGIN ─────────────────────────────────── -->
 <div id="login-screen" class="auth-container">
     <div class="auth-card">
-        <img src="assets/imgs/Logo2_AutoReq.png" alt="AutoReq Logo" class="logo-img" onerror="this.style.display='none'">
+        <img src="assets/imgs/Logo2_AutoReq.png" alt="AutoReq" class="logo-img"
+             onerror="this.outerHTML='<div style=\'font-size:1.8rem;font-weight:700;color:#0f172a;margin-bottom:8px;\'>AutoReq</div>'">
         <p class="brand-sub">Sistema de Gestão de Requisitos</p>
-        <form id="login-form">
-            <div class="group">
+
+        <form id="login-form" autocomplete="on">
+            <div class="group" style="text-align:left;">
                 <label>E-mail institucional</label>
-                <input type="email" id="login-email" placeholder="dev@empresa.com" required>
+                <input type="email" id="login-email" placeholder="dev@empresa.com"
+                       autocomplete="email" required>
             </div>
-            <div class="group">
+            <div class="group" style="text-align:left;">
                 <label>Senha</label>
-                <input type="password" id="login-password" placeholder="••••••••" required>
+                <input type="password" id="login-password" placeholder="••••••••"
+                       autocomplete="current-password" required>
             </div>
             <div id="login-error" class="msg-error" style="display:none;"></div>
-            <button type="submit" class="btn btn-primary btn-block">Entrar</button>
-            <a href="#" id="forgot-password-link" class="forgot-link">Esqueci minha senha</a>
+            <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </button>
         </form>
+        <a href="#" id="forgot-password-link" class="forgot-link">
+            <i class="fas fa-key" style="margin-right:4px;"></i>Esqueci minha senha
+        </a>
     </div>
 </div>
 
-<!-- APP PRINCIPAL -->
-<div id="main-app" class="app-layout" style="display: none;">
-    <aside class="sidebar">
-        <img src="assets/imgs/Logo2_AutoReq.png" alt="AutoReq" class="sidebar-logo" onerror="this.style.display='none'">
+<!-- ── MAIN APP ────────────────────────────────── -->
+<div id="main-app" class="app-layout" style="display:none;">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="assets/imgs/Logo2_AutoReq.png" alt="AutoReq" class="sidebar-logo"
+                 onerror="this.outerHTML='<span style=\'font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:-0.03em;\'>AutoReq</span>'">
+        </div>
+
         <nav class="nav-container">
-            <a href="#" class="nav-item active" data-target="dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
-            <a href="#" class="nav-item" data-target="projetos"><i class="fas fa-folder"></i> Projetos</a>
-            <a href="#" class="nav-item" data-target="requisitos"><i class="fas fa-clipboard-list"></i> Requisitos</a>
-            <a href="#" class="nav-item" data-target="uml"><i class="fas fa-sitemap"></i> Diagramas UML</a>
-            <a href="#" class="nav-item" data-target="relatorios"><i class="fas fa-chart-line"></i> Relatórios</a>
-            <a href="#" id="logout-btn" class="nav-item logout-link"><i class="fas fa-sign-out-alt"></i> Sair</a>
+            <span class="nav-section-label">Menu</span>
+            <a href="#" class="nav-item active" data-target="dashboard">
+                <i class="fas fa-th-large"></i> Dashboard
+            </a>
+            <a href="#" class="nav-item" data-target="projetos">
+                <i class="fas fa-folder-open"></i> Projetos
+            </a>
+            <a href="#" class="nav-item" data-target="requisitos">
+                <i class="fas fa-clipboard-list"></i> Requisitos
+            </a>
+            <a href="#" class="nav-item" data-target="uml">
+                <i class="fas fa-sitemap"></i> Diagramas UML
+            </a>
+            <a href="#" class="nav-item" data-target="relatorios">
+                <i class="fas fa-chart-bar"></i> Relatórios
+            </a>
+
+            <span class="nav-section-label" style="margin-top:auto;">Conta</span>
+            <a href="#" id="logout-btn" class="nav-item logout-link">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </a>
         </nav>
     </aside>
 
+    <!-- MAIN -->
     <div class="main-container">
+
         <header>
+            <div class="header-left">
+                <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="breadcrumb">
+                    <i class="fas fa-home" style="font-size:.75rem;"></i>
+                    <span id="breadcrumb-label"><strong>Dashboard</strong></span>
+                </div>
+            </div>
             <div class="user-profile">
-                <span id="user-name">Usuário</span>
-                <div class="avatar" id="user-avatar">-</div>
+                <div>
+                    <span id="user-name">Usuário</span>
+                    <span id="user-role">analista</span>
+                </div>
+                <div class="avatar" id="user-avatar">–</div>
             </div>
         </header>
 
         <main class="content-area">
 
-            <!-- ── DASHBOARD ─────────────────────────────────────── -->
+            <!-- ── DASHBOARD ─────────────────────── -->
             <section id="dashboard" class="tab-content active">
-                <h2>Visão Geral</h2>
+                <div class="page-header">
+                    <h2>Visão Geral</h2>
+                    <p>Resumo do seu projeto de requisitos</p>
+                </div>
+
                 <div class="stats-grid">
-                    <div class="card stat-card">
-                        <div class="stat-info"><small>Projetos ativos</small><h3 id="stat-proj">0</h3></div>
-                        <i class="fas fa-rocket icon-bg"></i>
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-rocket"></i></div>
+                        <div class="stat-info">
+                            <small>Projetos</small>
+                            <h3 id="stat-proj">0</h3>
+                        </div>
                     </div>
-                    <div class="card stat-card">
-                        <div class="stat-info"><small>Requisitos total</small><h3 id="stat-req">0</h3></div>
-                        <i class="fas fa-list-check icon-bg"></i>
+                    <div class="stat-card">
+                        <div class="stat-icon cyan"><i class="fas fa-list-check"></i></div>
+                        <div class="stat-info">
+                            <small>Requisitos</small>
+                            <h3 id="stat-req">0</h3>
+                        </div>
                     </div>
-                    <div class="card stat-card warning">
-                        <div class="stat-info"><small>Pendentes</small><h3 id="stat-pend">0</h3></div>
-                        <i class="fas fa-clock icon-bg"></i>
+                    <div class="stat-card">
+                        <div class="stat-icon yellow"><i class="fas fa-clock"></i></div>
+                        <div class="stat-info">
+                            <small>Pendentes</small>
+                            <h3 id="stat-pend">0</h3>
+                        </div>
                     </div>
-                    <div class="card stat-card success">
-                        <div class="stat-info"><small>Aprovados</small><h3 id="stat-aprov">0</h3></div>
-                        <i class="fas fa-check-circle icon-bg"></i>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-circle-check"></i></div>
+                        <div class="stat-info">
+                            <small>Aprovados</small>
+                            <h3 id="stat-aprov">0</h3>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- ── PROJETOS ──────────────────────────────────────── -->
+            <!-- ── PROJETOS ──────────────────────── -->
             <section id="projetos" class="tab-content">
-                <div class="header-row"><h2>Meus Projetos</h2></div>
+                <div class="header-row">
+                    <h2>Meus Projetos</h2>
+                </div>
+
                 <div class="card">
-                    <h3>+ Novo Projeto</h3>
+                    <p class="form-section-title" id="proj-form-title">
+                        <i class="fas fa-plus-circle"></i> Novo Projeto
+                    </p>
                     <form id="form-projeto">
                         <input type="hidden" id="proj-edit-id">
                         <div class="grid-2">
                             <div class="group">
                                 <label>Nome do Projeto *</label>
-                                <input type="text" id="proj-nome" required>
+                                <input type="text" id="proj-nome" placeholder="Ex: Sistema ERP" required>
                             </div>
                             <div class="group">
                                 <label>Cliente *</label>
-                                <input type="text" id="proj-cliente" required>
+                                <input type="text" id="proj-cliente" placeholder="Ex: Acme Corp" required>
                             </div>
                         </div>
                         <div class="grid-2">
@@ -120,27 +187,49 @@
                             </div>
                             <div class="group">
                                 <label>Descrição</label>
-                                <input type="text" id="proj-desc">
+                                <input type="text" id="proj-desc" placeholder="Breve descrição...">
                             </div>
                         </div>
                         <div class="btn-group">
-                            <button type="submit" class="btn btn-primary" id="proj-btn-submit">Criar Projeto</button>
-                            <button type="button" class="btn btn-secondary" id="proj-btn-cancelar" style="display:none;" onclick="cancelarEdicaoProjeto()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" id="proj-btn-submit">
+                                <i class="fas fa-save"></i> Criar Projeto
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="proj-btn-cancelar"
+                                    style="display:none;" onclick="cancelarEdicaoProjeto()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
                         </div>
                     </form>
                 </div>
-                <div class="card" style="margin-top:20px;">
-                    <table id="table-projetos">
-                        <thead><tr><th>Projeto</th><th>Cliente</th><th>Status</th><th>Ações</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
+
+                <div class="card">
+                    <p class="card-title"><i class="fas fa-table-list"></i> Projetos Cadastrados</p>
+                    <div class="table-wrap">
+                        <table id="table-projetos">
+                            <thead>
+                                <tr>
+                                    <th>Projeto</th>
+                                    <th>Cliente</th>
+                                    <th>Status</th>
+                                    <th style="width:160px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
-            <!-- ── REQUISITOS ────────────────────────────────────── -->
+            <!-- ── REQUISITOS ────────────────────── -->
             <section id="requisitos" class="tab-content">
-                <div class="card form-container">
-                    <h2>Cadastrar Requisito</h2>
+                <div class="header-row">
+                    <h2>Requisitos</h2>
+                </div>
+
+                <div class="card">
+                    <p class="form-section-title" id="req-form-title">
+                        <i class="fas fa-plus-circle"></i> Cadastrar Requisito
+                    </p>
                     <form id="form-requisito">
                         <input type="hidden" id="req-edit-id">
                         <div class="group">
@@ -150,7 +239,10 @@
                             </select>
                         </div>
                         <div class="grid-3">
-                            <div class="group"><label>Código *</label><input type="text" id="req-id" required placeholder="Ex: RF001"></div>
+                            <div class="group">
+                                <label>Código *</label>
+                                <input type="text" id="req-id" placeholder="RF001" required>
+                            </div>
                             <div class="group">
                                 <label>Tipo</label>
                                 <select id="req-tipo">
@@ -167,79 +259,99 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="group"><label>Título *</label><input type="text" id="req-titulo" required></div>
-                        <div class="group"><label>Descrição</label><textarea id="req-desc" rows="4"></textarea></div>
+                        <div class="group">
+                            <label>Título *</label>
+                            <input type="text" id="req-titulo" placeholder="Ex: Autenticação de Usuário" required>
+                        </div>
+                        <div class="group">
+                            <label>Descrição</label>
+                            <textarea id="req-desc" rows="4" placeholder="Descreva o requisito em detalhes..."></textarea>
+                        </div>
                         <div class="btn-group">
-                            <button type="submit" class="btn btn-primary" id="req-btn-submit">Salvar Requisito</button>
-                            <button type="button" class="btn btn-secondary" id="req-btn-cancelar" style="display:none;" onclick="cancelarEdicaoReq()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" id="req-btn-submit">
+                                <i class="fas fa-save"></i> Salvar Requisito
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="req-btn-cancelar"
+                                    style="display:none;" onclick="cancelarEdicaoReq()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
                         </div>
                     </form>
                 </div>
             </section>
 
-            <!-- ── DIAGRAMAS UML ──────────────────────────────────── -->
+            <!-- ── UML ──────────────────────────── -->
             <section id="uml" class="tab-content">
                 <div class="header-row">
-                    <h2>Diagrama UML (Casos de Uso)</h2>
-                    <div class="group" style="width:300px;margin-bottom:0;">
-                        <select id="uml-projeto-select" class="select-filter">
-                            <option value="">Escolha o projeto...</option>
+                    <h2>Diagrama UML</h2>
+                    <div class="group" style="margin:0;min-width:220px;">
+                        <select id="uml-projeto-select">
+                            <option value="">Escolha um projeto...</option>
                         </select>
                     </div>
                 </div>
                 <div class="card">
-                    <div id="mermaid-container" style="text-align:center;min-height:200px;">
-                        <p class="empty-msg">Selecione um projeto para gerar o diagrama.</p>
+                    <div id="mermaid-container" style="min-height:200px;">
+                        <div class="empty-state">
+                            <i class="fas fa-sitemap"></i>
+                            <p>Selecione um projeto para gerar o diagrama de casos de uso.</p>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- ── RELATÓRIOS ────────────────────────────────────── -->
+            <!-- ── RELATÓRIOS ────────────────────── -->
             <section id="relatorios" class="tab-content">
                 <div class="header-row">
-                    <h2>Relatórios de Requisitos</h2>
-                    <div class="group" style="width:300px;margin-bottom:0;">
-                        <select id="relatorio-projeto-select" class="select-filter">
-                            <option value="">Escolha o projeto...</option>
+                    <h2>Relatórios</h2>
+                    <div class="group" style="margin:0;min-width:220px;">
+                        <select id="relatorio-projeto-select">
+                            <option value="">Escolha um projeto...</option>
                         </select>
                     </div>
                 </div>
-                <!-- RF06 – Exportar ERS -->
-                <div class="card" id="export-card" style="display:none;margin-bottom:20px;">
+
+                <div class="card" id="export-card" style="display:none;">
                     <div class="export-row">
                         <div>
                             <h3>Exportar Documentação (ERS)</h3>
-                            <p style="color:var(--sub);font-size:.9rem;">Gere o documento de requisitos do projeto selecionado.</p>
+                            <p>Gere o documento de requisitos do projeto selecionado.</p>
                         </div>
                         <div class="btn-group">
-                            <button class="btn btn-primary" onclick="exportarERS('pdf')"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-                            <button class="btn btn-secondary" onclick="exportarERS('md')"><i class="fas fa-file-alt"></i> Exportar Markdown</button>
+                            <button class="btn btn-primary" onclick="exportarERS('pdf')">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportarERS('md')">
+                                <i class="fas fa-file-alt"></i> Markdown
+                            </button>
                         </div>
                     </div>
                 </div>
+
                 <div class="grid-2">
                     <div class="card">
-                        <h3>Distribuição (RF vs RNF)</h3>
+                        <p class="card-title"><i class="fas fa-chart-pie"></i> RF vs RNF</p>
                         <canvas id="chartRequisitos"></canvas>
                     </div>
                     <div class="card">
-                        <h3>Total por Prioridade</h3>
+                        <p class="card-title"><i class="fas fa-chart-bar"></i> Por Prioridade</p>
                         <canvas id="chartCategorias"></canvas>
                     </div>
                 </div>
             </section>
 
-            <!-- ── DETALHES DO PROJETO ───────────────────────────── -->
+            <!-- ── DETALHES PROJETO ──────────────── -->
             <section id="detalhes-projeto" class="tab-content">
                 <div class="header-row">
-                    <h2 id="view-projeto-nome">-</h2>
-                    <button class="btn btn-secondary" onclick="voltarProjetos()"><i class="fas fa-arrow-left"></i> Voltar</button>
+                    <h2 id="view-projeto-nome">–</h2>
+                    <button class="btn btn-secondary" onclick="voltarProjetos()">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </button>
                 </div>
 
-                <!-- Filtros SF04.1 -->
                 <div class="card filtros-card">
                     <div class="filtros-row">
-                        <div class="group" style="margin:0;">
+                        <div class="group">
                             <label>Tipo</label>
                             <select id="filtro-tipo" onchange="aplicarFiltros()">
                                 <option value="">Todos</option>
@@ -247,7 +359,7 @@
                                 <option value="RNF">RNF</option>
                             </select>
                         </div>
-                        <div class="group" style="margin:0;">
+                        <div class="group">
                             <label>Prioridade</label>
                             <select id="filtro-prioridade" onchange="aplicarFiltros()">
                                 <option value="">Todas</option>
@@ -256,7 +368,7 @@
                                 <option value="Baixa">Baixa</option>
                             </select>
                         </div>
-                        <div class="group" style="margin:0;">
+                        <div class="group">
                             <label>Status</label>
                             <select id="filtro-status" onchange="aplicarFiltros()">
                                 <option value="">Todos</option>
@@ -269,25 +381,27 @@
                 </div>
 
                 <div class="card">
-                    <table id="table-requisitos-projeto">
-                        <thead>
-                            <tr>
-                                <th>Cód</th>
-                                <th>Título</th>
-                                <th>Tipo</th>
-                                <th>Prioridade</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                    <div class="table-wrap">
+                        <table id="table-requisitos-projeto">
+                            <thead>
+                                <tr>
+                                    <th>Cód</th>
+                                    <th>Título</th>
+                                    <th>Tipo</th>
+                                    <th>Prioridade</th>
+                                    <th>Status</th>
+                                    <th style="width:200px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
         </main>
-    </div>
-</div>
+    </div><!-- /main-container -->
+</div><!-- /app-layout -->
 
 <script src="script.js"></script>
 </body>
