@@ -26,32 +26,54 @@
 <!-- SIDEBAR OVERLAY (mobile) -->
 <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-<!-- ── LOGIN ─────────────────────────────────── -->
+<!-- ── LOGIN / REGISTER ─────────────────────────── -->
 <div id="login-screen" class="auth-container">
     <div class="auth-card">
-        <img src="assets/imgs/Logo2_AutoReq.png" alt="AutoReq" class="logo-img"
-             onerror="this.outerHTML='<div style=\'font-size:1.8rem;font-weight:700;color:#0f172a;margin-bottom:8px;\'>AutoReq</div>'">
-        <p class="brand-sub">Sistema de Gestão de Requisitos</p>
+        <img src="assets/imgs/Logo2_AutoReq.png" alt="AutoReq" class="logo-img" onerror="this.outerHTML='<div style=\'font-size:1.8rem;font-weight:700;color:#0f172a;margin-bottom:8px;\'>AutoReq</div>'">
+        
+        <!-- Formulário de Login -->
+        <div id="auth-login-box">
+            <p class="brand-sub">Entrar no Sistema</p>
+            <form id="login-form">
+                <div class="group" style="text-align:left;">
+                    <label>E-mail institucional</label>
+                    <input type="email" id="login-email" placeholder="dev@empresa.com" required>
+                </div>
+                <div class="group" style="text-align:left;">
+                    <label>Senha</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+            </form>
+            <p style="margin-top:15px; font-size:0.85rem; color:var(--sub);">
+                Não tem conta? <a href="#" onclick="toggleAuth(event, 'register')" style="color:var(--primary); font-weight:600;">Cadastre-se</a>
+            </p>
+        </div>
 
-        <form id="login-form" autocomplete="on">
-            <div class="group" style="text-align:left;">
-                <label>E-mail institucional</label>
-                <input type="email" id="login-email" placeholder="dev@empresa.com"
-                       autocomplete="email" required>
-            </div>
-            <div class="group" style="text-align:left;">
-                <label>Senha</label>
-                <input type="password" id="login-password" placeholder="••••••••"
-                       autocomplete="current-password" required>
-            </div>
-            <div id="login-error" class="msg-error" style="display:none;"></div>
-            <button type="submit" class="btn btn-primary btn-block" id="login-btn">
-                <i class="fas fa-sign-in-alt"></i> Entrar
-            </button>
-        </form>
-        <a href="#" id="forgot-password-link" class="forgot-link">
-            <i class="fas fa-key" style="margin-right:4px;"></i>Esqueci minha senha
-        </a>
+        <!-- Formulário de Cadastro -->
+        <div id="auth-register-box" style="display:none;">
+            <p class="brand-sub">Criar nova conta</p>
+            <form id="register-form">
+                <div class="group" style="text-align:left;">
+                    <label>Nome Completo</label>
+                    <input type="text" id="reg-nome" placeholder="Seu nome" required>
+                </div>
+                <div class="group" style="text-align:left;">
+                    <label>E-mail</label>
+                    <input type="email" id="reg-email" placeholder="email@exemplo.com" required>
+                </div>
+                <div class="group" style="text-align:left;">
+                    <label>Senha</label>
+                    <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" required>
+                </div>
+                <button type="submit" class="btn btn-success btn-block">Criar Conta</button>
+            </form>
+            <p style="margin-top:15px; font-size:0.85rem; color:var(--sub);">
+                Já tem conta? <a href="#" onclick="toggleAuth(event, 'login')" style="color:var(--primary); font-weight:600;">Fazer Login</a>
+            </p>
+        </div>
+
+        <div id="login-error" class="msg-error" style="display:none; margin-top:15px;"></div>
     </div>
 </div>
 
