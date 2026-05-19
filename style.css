@@ -751,3 +751,367 @@ code {
 /* ── MERMAID ── */
 #mermaid-container { overflow: auto; }
 #mermaid-container svg { max-width: 100%; height: auto; }
+/* ══════════════════════════════════════════════════════════════════════════
+   DIAGRAMS ATTACH MODULE
+   Adicionado ao fim do arquivo — maior especificidade sem alterar nada acima
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── DROPZONE ── */
+.diagrams-dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 36px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+    background: var(--bg);
+    position: relative;
+    user-select: none;
+}
+.diagrams-dropzone:hover,
+.diagrams-dropzone:focus,
+.diagrams-dropzone.drag-over {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    outline: none;
+}
+.diagrams-dz-icon {
+    font-size: 2.2rem;
+    color: var(--primary);
+    opacity: .6;
+    display: block;
+    margin-bottom: 10px;
+    pointer-events: none;
+}
+.diagrams-dz-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    pointer-events: none;
+}
+.diagrams-dz-hint {
+    font-size: 0.78rem;
+    color: var(--sub);
+    pointer-events: none;
+}
+.diagrams-dz-hint code {
+    margin: 0 2px;
+}
+
+/* ── LISTA DE ANEXOS ── */
+.diagrams-list {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.diagrams-list-empty {
+    color: var(--sub);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 16px 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.diagrams-list-empty i { opacity: .4; font-size: 1rem; }
+
+/* ── ITEM DE DIAGRAMA ── */
+.diagram-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    box-shadow: var(--shadow);
+    transition: box-shadow var(--transition);
+    animation: fadeIn .2s ease;
+}
+.diagram-item:hover { box-shadow: var(--shadow-md); }
+
+/* Ícone por tipo */
+.diagram-item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.diagram-item-icon.type-drawio { background: #fff7ed; color: #ea580c; }
+.diagram-item-icon.type-svg    { background: #f0fdf4; color: #16a34a; }
+.diagram-item-icon.type-image  { background: #eff6ff; color: var(--primary); }
+.diagram-item-icon.type-pdf    { background: #fef2f2; color: var(--danger); }
+.diagram-item-icon.type-xml    { background: #faf5ff; color: #7c3aed; }
+.diagram-item-icon.type-other  { background: var(--bg); color: var(--sub); }
+
+/* Metadados */
+.diagram-item-meta {
+    flex: 1;
+    min-width: 0;
+}
+.diagram-item-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.diagram-item-size {
+    font-size: 0.72rem;
+    color: var(--sub);
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Ações */
+.diagram-item-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* Preview inline */
+.diagram-preview-wrap {
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--bg);
+    max-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.diagram-preview-wrap img,
+.diagram-preview-wrap iframe {
+    max-width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    border: none;
+}
+
+/* ── RESPONSIVO ── */
+@media (max-width: 768px) {
+    .diagrams-dropzone { padding: 24px 16px; }
+    .diagram-item { flex-wrap: wrap; gap: 10px; }
+    .diagram-item-actions { width: 100%; justify-content: flex-end; }
+}
+/* /DIAGRAMS ATTACH MODULE */
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PERFIL DRAWER MODULE
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Botão avatar clicável */
+.avatar-btn {
+    cursor: pointer;
+    border: 2px solid transparent;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+    padding: 0;
+}
+.avatar-btn:hover {
+    border-color: rgba(37,99,235,.35);
+    box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+    transform: scale(1.06);
+}
+.avatar-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+}
+
+/* Overlay escurecido */
+.perfil-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 290;
+    background: rgba(15,23,42,.45);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+}
+.perfil-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Drawer lateral */
+.perfil-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 300;
+    width: 360px;
+    max-width: 100vw;
+    background: var(--white);
+    box-shadow: -8px 0 32px rgba(15,23,42,.12);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform .3s cubic-bezier(.34,1.2,.64,1);
+}
+.perfil-drawer.open {
+    transform: translateX(0);
+}
+
+/* Cabeçalho do drawer */
+.perfil-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    flex-shrink: 0;
+}
+.perfil-drawer-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--text);
+}
+.perfil-drawer-title i {
+    color: var(--primary);
+    font-size: 1rem;
+}
+.perfil-close-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--sub);
+    border-radius: var(--radius-sm);
+    display: grid;
+    place-items: center;
+    font-size: .9rem;
+    transition: background var(--transition), color var(--transition);
+}
+.perfil-close-btn:hover {
+    background: var(--border);
+    color: var(--text);
+}
+
+/* Corpo do drawer */
+.perfil-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+/* Avatar grande + info */
+.perfil-avatar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.perfil-avatar-big {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(37,99,235,.25);
+}
+.perfil-avatar-name {
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--text);
+}
+.perfil-avatar-role {
+    font-size: .75rem;
+    color: var(--sub);
+    text-transform: capitalize;
+    margin-top: 2px;
+}
+
+/* Divisor */
+.perfil-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0 0 20px;
+}
+
+/* Label de secção interna */
+.perfil-section-label {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--sub);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding-top: 4px;
+    border-top: 1px solid var(--border);
+}
+.perfil-section-label i { color: var(--primary); }
+.perfil-optional {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--sub);
+    font-size: .72rem;
+    margin-left: 4px;
+    opacity: .75;
+}
+
+/* Mensagem de sucesso */
+.msg-success {
+    background: #ecfdf5;
+    color: var(--success);
+    border: 1px solid #a7f3d0;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: .82rem;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+/* Campo de password com botão de visibilidade */
+.input-password-wrap {
+    position: relative;
+}
+.input-password-wrap input {
+    padding-right: 42px;
+}
+.toggle-pw-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--sub);
+    font-size: .85rem;
+    padding: 4px;
+    line-height: 1;
+    transition: color var(--transition);
+}
+.toggle-pw-btn:hover { color: var(--primary); }
+
+/* Responsivo */
+@media (max-width: 480px) {
+    .perfil-drawer { width: 100vw; }
+}
+
+/* /PERFIL DRAWER MODULE */
