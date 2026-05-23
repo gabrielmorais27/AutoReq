@@ -1115,3 +1115,112 @@ code {
 }
 
 /* /PERFIL DRAWER MODULE */
+
+/* ── PROFILE DROPDOWN ── */
+.avatar-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.avatar-btn {
+    cursor: pointer;
+    user-select: none;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 500;
+    min-width: 200px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 6px;
+    /* Hidden by default */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px) scale(0.97);
+    transform-origin: top right;
+    transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.18s ease;
+    pointer-events: none;
+}
+
+/* Tiny arrow pointing up */
+.profile-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 14px;
+    width: 10px;
+    height: 10px;
+    background: var(--white);
+    border-left: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    transform: rotate(45deg);
+}
+
+.profile-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.profile-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.profile-dropdown-item i {
+    width: 16px;
+    text-align: center;
+    color: var(--sub);
+    font-size: 0.85rem;
+    transition: color var(--transition);
+}
+
+.profile-dropdown-item:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.profile-dropdown-item:hover i {
+    color: var(--primary);
+}
+
+.profile-dropdown-item--danger {
+    color: var(--danger);
+}
+
+.profile-dropdown-item--danger i {
+    color: var(--danger);
+}
+
+.profile-dropdown-item--danger:hover {
+    background: #fef2f2;
+    color: var(--danger);
+}
+
+.profile-dropdown-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 6px;
+}
+/* /PROFILE DROPDOWN */
