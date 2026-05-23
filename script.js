@@ -246,10 +246,78 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ─── LOGOUT ──────────────────────────────────────────────────────────
-    document.getElementById('logout-btn').addEventListener('click', (e) => {
-        e.preventDefault();
+    function fazerLogout() {
         limparSessao();
         window.location.reload();
+    }
+
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fazerLogout();
+        });
+    }
+
+    // ─── PERFIL DROPDOWN ─────────────────────────────────────────────────
+    const avatarEl        = document.getElementById('user-avatar');
+    const profileDropdown = document.getElementById('profile-dropdown');
+
+    function openProfileDropdown() {
+        profileDropdown.classList.add('show');
+        avatarEl.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeProfileDropdown() {
+        profileDropdown.classList.remove('show');
+        avatarEl.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleProfileDropdown() {
+        if (profileDropdown.classList.contains('show')) {
+            closeProfileDropdown();
+        } else {
+            openProfileDropdown();
+        }
+    }
+
+    // Abre/fecha ao clicar no avatar
+    avatarEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleProfileDropdown();
+    });
+
+    // Abre/fecha com teclado (Enter / Espaço / Esc)
+    avatarEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleProfileDropdown();
+        } else if (e.key === 'Escape') {
+            closeProfileDropdown();
+        }
+    });
+
+    // Fechar ao clicar fora do dropdown
+    document.addEventListener('click', (e) => {
+        if (
+            profileDropdown.classList.contains('show') &&
+            !profileDropdown.contains(e.target) &&
+            e.target !== avatarEl
+        ) {
+            closeProfileDropdown();
+        }
+    });
+
+    // Botão "Configurar Conta" no dropdown → abre o drawer de perfil
+    document.getElementById('dropdown-config-conta').addEventListener('click', () => {
+        closeProfileDropdown();
+        window.abrirPerfilDrawer();
+    });
+
+    // Botão "Sair" no dropdown → mesmo comportamento que o botão da sidebar
+    document.getElementById('dropdown-logout').addEventListener('click', () => {
+        closeProfileDropdown();
+        fazerLogout();
     });
 
     // ─── RECUPERAÇÃO DE SENHA ─────────────────────────────────────────────
