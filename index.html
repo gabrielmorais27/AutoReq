@@ -105,8 +105,7 @@
                 <i class="fas fa-chart-bar"></i> Relatórios
             </a>
 
-            <span class="nav-section-label" style="margin-top:auto;">Conta</span>
-            <a href="#" id="logout-btn" class="nav-item logout-link">
+            <a href="#" id="logout-btn" class="nav-item logout-link" style="margin-top:auto;">
                 <i class="fas fa-sign-out-alt"></i> Sair
             </a>
         </nav>
@@ -130,7 +129,18 @@
                     <span id="user-name">Usuário</span>
                     <span id="user-role">analista</span>
                 </div>
-                <div class="avatar" id="user-avatar">–</div>
+                <div class="avatar-wrapper" id="avatar-wrapper">
+                    <div class="avatar avatar-btn" id="user-avatar" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0" title="Menu da conta">–</div>
+                    <div class="profile-dropdown" id="profile-dropdown" role="menu">
+                        <button class="profile-dropdown-item" id="dropdown-config-conta" role="menuitem">
+                            <i class="fas fa-user-cog"></i> Configurar Conta
+                        </button>
+                        <div class="profile-dropdown-divider"></div>
+                        <button class="profile-dropdown-item profile-dropdown-item--danger" id="dropdown-logout" role="menuitem">
+                            <i class="fas fa-sign-out-alt"></i> Sair
+                        </button>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -424,6 +434,69 @@
         </main>
     </div><!-- /main-container -->
 </div><!-- /app-layout -->
+
+<!-- ── PERFIL DRAWER ──────────────────────────────────── -->
+<div class="perfil-overlay" id="perfil-overlay" onclick="fecharPerfilDrawer()"></div>
+<aside class="perfil-drawer" id="perfil-drawer" aria-label="Configurações da Conta">
+    <div class="perfil-drawer-header">
+        <div class="perfil-drawer-title">
+            <i class="fas fa-user-cog"></i> Configurações da Conta
+        </div>
+        <button class="perfil-close-btn" onclick="fecharPerfilDrawer()" title="Fechar" aria-label="Fechar painel">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="perfil-drawer-body">
+        <div class="perfil-avatar-wrap">
+            <div class="perfil-avatar-big" id="perfil-avatar-big">?</div>
+            <div>
+                <div class="perfil-avatar-name" id="perfil-display-nome">–</div>
+                <div class="perfil-avatar-role" id="perfil-display-role">analista</div>
+            </div>
+        </div>
+        <hr class="perfil-divider">
+
+        <div id="perfil-msg-error"   class="msg-error"   style="display:none;"></div>
+        <div id="perfil-msg-success" class="msg-success" style="display:none;"></div>
+
+        <p class="perfil-section-label"><i class="fas fa-id-card"></i> Dados Pessoais</p>
+        <div class="group">
+            <label>Nome Completo</label>
+            <input type="text" id="perfil-nome" placeholder="O seu nome" autocomplete="name">
+        </div>
+        <div class="group">
+            <label>E-mail</label>
+            <input type="email" id="perfil-email" placeholder="email@exemplo.com" autocomplete="email">
+        </div>
+
+        <p class="perfil-section-label">
+            <i class="fas fa-lock"></i> Alterar Senha
+            <span class="perfil-optional">(opcional)</span>
+        </p>
+        <div class="group">
+            <label>Nova Senha</label>
+            <div class="input-password-wrap">
+                <input type="password" id="perfil-senha" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                <button type="button" class="toggle-pw-btn" onclick="toggleSenhaVisivel()" title="Mostrar/Ocultar senha" aria-label="Mostrar senha">
+                    <i class="fas fa-eye" id="toggle-pw-icon"></i>
+                </button>
+            </div>
+        </div>
+        <div class="group">
+            <label>Confirmar Nova Senha</label>
+            <input type="password" id="perfil-senha-confirm" placeholder="Repita a senha" autocomplete="new-password">
+        </div>
+
+        <div class="btn-group" style="margin-top:8px;">
+            <button class="btn btn-primary" id="perfil-salvar-btn" onclick="salvarPerfil()">
+                <i class="fas fa-save"></i> Guardar Alterações
+            </button>
+            <button class="btn btn-secondary" onclick="fecharPerfilDrawer()">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+        </div>
+    </div>
+</aside>
 
 <script src="script.js"></script>
 </body>
