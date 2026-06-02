@@ -134,16 +134,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strtolower($_GET['action'] ?? '') =
     }
 
     // Persiste referência (cria tabela via PATCH SQL se ainda não existir)
-    $projetoId = intval($_POST['projeto_id'] ?? 0) ?: null;
+    $projetoId     = intval($_POST['projeto_id']    ?? 0) ?: null;
+    $tipoDiagrama  = trim($_POST['tipo_diagrama']   ?? 'geral');
+    $tiposValidos  = ['caso_uso', 'classe', 'sequencia', 'geral'];
+    if (!in_array($tipoDiagrama, $tiposValidos, true)) $tipoDiagrama = 'geral';
+
     try {
         $stmt = $pdo->prepare("
             INSERT INTO diagrams_externos
-                  (usuario_id, projeto_id, arquivo_original, arquivo_servidor, tamanho_bytes)
-            VALUES (:uid, :pid, :orig, :srv, :sz)
+                  (usuario_id, projeto_id, tipo_diagrama, arquivo_original, arquivo_servidor, tamanho_bytes)
+            VALUES (:uid, :pid, :tipo, :orig, :srv, :sz)
         ");
         $stmt->execute([
             ':uid'  => $usuarioId,
             ':pid'  => $projetoId,
+            ':tipo' => $tipoDiagrama,
             ':orig' => $origName,
             ':srv'  => $uniqueName,
             ':sz'   => $size,
@@ -168,18 +173,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && strtolower($_GET['action'] ?? '') =
 
 // ── GET: listar diagramas de um projeto ───────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && strtolower($_GET['tipo'] ?? '') === 'diagrams') {
-    $uid = intval($_GET['usuario_id'] ?? 0);
-    $pid = intval($_GET['projeto_id'] ?? 0);
+    $uid      = intval($_GET['usuario_id']    ?? 0);
+    $pid      = intval($_GET['projeto_id']    ?? 0);
+    $tipoFilt = trim($_GET['tipo_diagrama']   ?? '');
+
     try {
-        $stmt = $pdo->prepare("
-            SELECT id, arquivo_original, arquivo_servidor, tamanho_bytes, criado_em,
+        $sql = "
+            SELECT id, tipo_diagrama, arquivo_original, arquivo_servidor, tamanho_bytes, criado_em,
                    CONCAT('uploads/diagrams/', arquivo_servidor) AS url
             FROM   diagrams_externos
             WHERE  usuario_id = :uid
               AND  (:pid = 0 OR projeto_id = :pid2)
-            ORDER  BY criado_em DESC
-        ");
-        $stmt->execute([':uid' => $uid, ':pid' => $pid, ':pid2' => $pid]);
+        ";
+        $params = [':uid' => $uid, ':pid' => $pid, ':pid2' => $pid];
+
+        if ($tipoFilt !== '') {
+            $sql   .= " AND tipo_diagrama = :tipo";
+            $params[':tipo'] = $tipoFilt;
+        }
+
+        $sql .= " ORDER BY criado_em DESC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
         respond($stmt->fetchAll());
     } catch (PDOException) {
         respond([]); // tabela não existe ainda — retorna lista vazia
@@ -340,6 +355,49 @@ if ($method === 'POST') {
             trim($body->texto),
         ]);
         respond(["success" => "Comentário salvo!"]);
+    }
+
+    // ── Atualizar Perfil do Usuário ───────────────────────────────────────
+    if ($tipo === 'update_perfil') {
+        required($body, ['usuario_id', 'nome', 'email']);
+        $uid   = (int)$body->usuario_id;
+        $nome  = trim($body->nome);
+        $email = trim($body->email);
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            respond(["error" => "E-mail inválido."], 400);
+        }
+
+        // Verifica se o e-mail já está em uso por outro usuário
+        $chk = $pdo->prepare("SELECT id FROM usuarios WHERE email = ? AND id != ? LIMIT 1");
+        $chk->execute([$email, $uid]);
+        if ($chk->fetch()) {
+            respond(["error" => "Este e-mail já está em uso por outro usuário."], 409);
+        }
+
+        // Monta o UPDATE dinâmico (senha é opcional)
+        if (!empty($body->nova_senha)) {
+            $novaSenha = trim($body->nova_senha);
+            if (strlen($novaSenha) < 6) {
+                respond(["error" => "A nova senha deve ter pelo menos 6 caracteres."], 400);
+            }
+            $hash = password_hash($novaSenha, PASSWORD_BCRYPT);
+            $stmt = $pdo->prepare(
+                "UPDATE usuarios SET nome = ?, email = ?, senha = ? WHERE id = ?"
+            );
+            $stmt->execute([$nome, $email, $hash, $uid]);
+        } else {
+            $stmt = $pdo->prepare(
+                "UPDATE usuarios SET nome = ?, email = ? WHERE id = ?"
+            );
+            $stmt->execute([$nome, $email, $uid]);
+        }
+
+        if ($stmt->rowCount() === 0) {
+            respond(["error" => "Usuário não encontrado ou nenhuma alteração detectada."], 404);
+        }
+
+        respond(["success" => true, "message" => "Perfil atualizado com sucesso!"]);
     }
 
     respond(["error" => "Rota POST não reconhecida."], 404);
