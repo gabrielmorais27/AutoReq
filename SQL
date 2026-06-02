@@ -1,76 +1,169 @@
--- ─── BANCO DE DADOS ───────────────────────────────────────────────────────────
-CREATE DATABASE IF NOT EXISTS autoreq
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+-- ============================================================
+--  AutoReq — Script completo de criação do banco de dados
+--  Versão: compatível com as correções de diagrams_externos
+--
+--  Como usar no phpMyAdmin:
+--    1. Selecione o banco "autoreq" no menu lateral
+--    2. Clique na aba "SQL"
+--    3. Cole todo este conteúdo e clique em "Executar"
+--
+--  ⚠️  Este script apaga e recria todas as tabelas.
+--      Faça um backup antes se houver dados importantes.
+-- ============================================================
 
-USE autoreq;
+SET FOREIGN_KEY_CHECKS = 0;
+SET NAMES utf8mb4;
 
--- ─── TABELA: usuarios ─────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS usuarios (
-  id            INT UNSIGNED    NOT NULL AUTO_INCREMENT,
-  nome          VARCHAR(150)    NOT NULL,
-  email         VARCHAR(255)    NOT NULL UNIQUE,
-  senha         VARCHAR(255)    NOT NULL,
-  papel         ENUM('admin','usuario') NOT NULL DEFAULT 'usuario',
-  criado_em     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ─── 1. USUÁRIOS ─────────────────────────────────────────────────────────────
 
--- ─── TABELA: projetos ─────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS projetos (
-  id            INT UNSIGNED    NOT NULL AUTO_INCREMENT,
-  usuario_id    INT UNSIGNED    NOT NULL,
-  nome          VARCHAR(255)    NOT NULL,
-  cliente       VARCHAR(255)         NULL DEFAULT NULL,
-  status        VARCHAR(50)     NOT NULL DEFAULT 'Planejamento',
-  descricao     TEXT                 NULL,
-  data_criacao  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  CONSTRAINT fk_projetos_usuario
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+DROP TABLE IF EXISTS `usuarios`;
 
--- ─── TABELA: requisitos ───────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS requisitos (
-  id            INT UNSIGNED    NOT NULL AUTO_INCREMENT,
-  projeto_id    INT UNSIGNED    NOT NULL,
-  codigo        VARCHAR(50)          NULL DEFAULT NULL,
-  tipo          ENUM('RF','RNF')NOT NULL DEFAULT 'RF',
-  titulo        VARCHAR(255)    NOT NULL,
-  descricao     TEXT                 NULL,
-  prioridade    ENUM('Alta','Média','Baixa') NOT NULL DEFAULT 'Média',
-  status        ENUM('Pendente','Aprovado','Revisão') NOT NULL DEFAULT 'Pendente',
-  justificativa TEXT                 NULL,
-  data_criacao  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  CONSTRAINT fk_requisitos_projeto
-    FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE `usuarios` (
+  `id`            INT           NOT NULL AUTO_INCREMENT,
+  `nome`          VARCHAR(100)  NOT NULL,
+  `email`         VARCHAR(150)  NOT NULL,
+  `senha`         VARCHAR(255)  NOT NULL                  COMMENT 'Hash bcrypt',
+  `papel`         ENUM('admin','analista','gerente')
+                                NOT NULL DEFAULT 'analista',
+  `ultimo_acesso` DATETIME          NULL DEFAULT NULL,
+  `criado_em`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
--- ─── TABELA: comentarios ──────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS comentarios (
-  id            INT UNSIGNED    NOT NULL AUTO_INCREMENT,
-  requisito_id  INT UNSIGNED    NOT NULL,
-  usuario_id    INT UNSIGNED         NULL DEFAULT NULL,
-  texto         TEXT            NOT NULL,
-  criado_em     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  CONSTRAINT fk_comentarios_requisito
-    FOREIGN KEY (requisito_id) REFERENCES requisitos(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_email` (`email`)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='Usuários da aplicação';
 
--- ─── TABELA: diagrams_externos ────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS diagrams_externos (
-  id                INT UNSIGNED    NOT NULL AUTO_INCREMENT,
-  usuario_id        INT UNSIGNED    NOT NULL,
-  projeto_id        INT UNSIGNED         NULL DEFAULT NULL,
-  arquivo_original  VARCHAR(500)    NOT NULL,
-  arquivo_servidor  VARCHAR(500)    NOT NULL,
-  tamanho_bytes     INT UNSIGNED    NOT NULL DEFAULT 0,
-  criado_em         DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  CONSTRAINT fk_diagrams_usuario
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-  CONSTRAINT fk_diagrams_projeto
-    FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE SET NULL
-) ENG
+
+-- ─── 2. PROJETOS ─────────────────────────────────────────────────────────────
+
+DROP TABLE IF EXISTS `projetos`;
+
+CREATE TABLE `projetos` (
+  `id`           INT           NOT NULL AUTO_INCREMENT,
+  `nome`         VARCHAR(200)  NOT NULL,
+  `cliente`      VARCHAR(200)  NOT NULL DEFAULT '',
+  `status`       ENUM('Planejamento','Em andamento','Concluído','Cancelado')
+                               NOT NULL DEFAULT 'Planejamento',
+  `descricao`    TEXT              NULL,
+  `usuario_id`   INT           NOT NULL,
+  `data_criacao` DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id`),
+  INDEX `idx_usuario` (`usuario_id`),
+  CONSTRAINT `fk_projetos_usuario`
+    FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='Projetos de cada usuário';
+
+
+-- ─── 3. REQUISITOS ───────────────────────────────────────────────────────────
+
+DROP TABLE IF EXISTS `requisitos`;
+
+CREATE TABLE `requisitos` (
+  `id`            INT           NOT NULL AUTO_INCREMENT,
+  `codigo`        VARCHAR(50)   NOT NULL                  COMMENT 'Ex: RF-001, RNF-002',
+  `tipo`          ENUM('RF','RNF','RN')
+                                NOT NULL DEFAULT 'RF'     COMMENT 'RF=Funcional, RNF=Não-funcional, RN=Negócio',
+  `titulo`        VARCHAR(300)  NOT NULL,
+  `descricao`     TEXT              NULL,
+  `prioridade`    ENUM('Alta','Média','Baixa')
+                                NOT NULL DEFAULT 'Média',
+  `status`        ENUM('Pendente','Aprovado','Revisão')
+                                NOT NULL DEFAULT 'Pendente',
+  `justificativa` TEXT              NULL                  COMMENT 'Preenchido ao validar/reprovar',
+  `projeto_id`    INT           NOT NULL,
+  `usuario_id`    INT           NOT NULL,
+  `data_criacao`  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id`),
+  INDEX `idx_projeto`    (`projeto_id`),
+  INDEX `idx_usuario`    (`usuario_id`),
+  INDEX `idx_status`     (`status`),
+  INDEX `idx_tipo`       (`tipo`),
+  INDEX `idx_prioridade` (`prioridade`),
+  CONSTRAINT `fk_requisitos_projeto`
+    FOREIGN KEY (`projeto_id`) REFERENCES `projetos` (`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_requisitos_usuario`
+    FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='Requisitos vinculados a projetos';
+
+
+-- ─── 4. COMENTÁRIOS ──────────────────────────────────────────────────────────
+
+DROP TABLE IF EXISTS `comentarios`;
+
+CREATE TABLE `comentarios` (
+  `id`            INT           NOT NULL AUTO_INCREMENT,
+  `requisito_id`  INT           NOT NULL,
+  `autor`         VARCHAR(100)  NOT NULL DEFAULT 'Usuário',
+  `texto`         TEXT          NOT NULL,
+  `criado_em`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id`),
+  INDEX `idx_requisito` (`requisito_id`),
+  CONSTRAINT `fk_comentarios_requisito`
+    FOREIGN KEY (`requisito_id`) REFERENCES `requisitos` (`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='Comentários por requisito';
+
+
+-- ─── 5. DIAGRAMAS EXTERNOS ───────────────────────────────────────────────────
+
+DROP TABLE IF EXISTS `diagrams_externos`;
+
+CREATE TABLE `diagrams_externos` (
+  `id`               INT           NOT NULL AUTO_INCREMENT,
+  `usuario_id`       INT           NOT NULL,
+  `projeto_id`       INT               NULL DEFAULT NULL,
+  `tipo_diagrama`    VARCHAR(50)   NOT NULL DEFAULT 'geral'
+                     COMMENT 'caso_uso | classe | sequencia | geral',
+  `arquivo_original` VARCHAR(255)  NOT NULL                COMMENT 'Nome original enviado pelo usuário',
+  `arquivo_servidor` VARCHAR(255)  NOT NULL                COMMENT 'Nome único salvo em uploads/diagrams/',
+  `tamanho_bytes`    INT           NOT NULL DEFAULT 0,
+  `criado_em`        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`id`),
+  INDEX `idx_usuario`  (`usuario_id`),
+  INDEX `idx_projeto`  (`projeto_id`),
+  INDEX `idx_tipo`     (`tipo_diagrama`),
+  CONSTRAINT `fk_diagrams_usuario`
+    FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_diagrams_projeto`
+    FOREIGN KEY (`projeto_id`) REFERENCES `projetos` (`id`)
+    ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='Referências dos arquivos de diagrama enviados';
+
+
+-- ─── 6. USUÁRIO ADMIN PADRÃO ─────────────────────────────────────────────────
+-- Senha: admin123  (hash bcrypt gerado pelo PHP)
+-- Para trocar a senha: acesse Configurações dentro do app.
+
+INSERT INTO `usuarios` (`nome`, `email`, `senha`, `papel`) VALUES
+(
+  'Admin',
+  'admin@autoreq.com',
+  '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+  'admin'
+);
+
+-- ─── FIM ──────────────────────────────────────────────────────────────────────
+
+SET FOREIGN_KEY_CHECKS = 1;
