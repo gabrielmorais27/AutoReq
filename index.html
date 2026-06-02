@@ -314,22 +314,121 @@
 
             <!-- ── UML ──────────────────────────── -->
             <section id="uml" class="tab-content">
-                <div class="header-row">
-                    <h2>Diagrama UML</h2>
-                    <div class="group" style="margin:0;min-width:220px;">
-                        <select id="uml-projeto-select">
-                            <option value="">Escolha um projeto...</option>
-                        </select>
-                    </div>
+                <div class="page-header">
+                    <h2>Diagramas UML</h2>
+                    <p>Gerencie os diagramas dos seus projetos por tipo</p>
                 </div>
-                <div class="card">
-                    <div id="mermaid-container" style="min-height:200px;">
-                        <div class="empty-state">
-                            <i class="fas fa-sitemap"></i>
-                            <p>Selecione um projeto para gerar o diagrama de casos de uso.</p>
+
+                <!-- Seletor de Projeto -->
+                <div class="card uml-project-selector">
+                    <div class="uml-selector-row">
+                        <div class="uml-selector-icon">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <div class="group" style="margin:0;flex:1;">
+                            <label>Projeto</label>
+                            <select id="uml-projeto-select">
+                                <option value="">Escolha um projeto para gerenciar diagramas...</option>
+                            </select>
                         </div>
                     </div>
                 </div>
+
+                <!-- Estado inicial sem projeto selecionado -->
+                <div id="uml-empty-state" class="card" style="margin-top:0;">
+                    <div class="empty-state">
+                        <i class="fas fa-sitemap"></i>
+                        <p>Selecione um projeto acima para gerenciar seus diagramas UML.</p>
+                    </div>
+                </div>
+
+                <!-- Painel principal (oculto até selecionar projeto) -->
+                <div id="uml-panel" style="display:none;">
+
+                    <!-- Tabs de tipo de diagrama -->
+                    <div class="uml-type-tabs">
+                        <button class="uml-tab-btn active" data-tipo="caso_uso" onclick="umlSelecionarTipo('caso_uso')">
+                            <i class="fas fa-users-rectangle"></i>
+                            <span>Caso de Uso</span>
+                        </button>
+                        <button class="uml-tab-btn" data-tipo="classe" onclick="umlSelecionarTipo('classe')">
+                            <i class="fas fa-table-cells-large"></i>
+                            <span>Classe</span>
+                        </button>
+                        <button class="uml-tab-btn" data-tipo="sequencia" onclick="umlSelecionarTipo('sequencia')">
+                            <i class="fas fa-diagram-project"></i>
+                            <span>Sequência</span>
+                        </button>
+                    </div>
+
+                    <!-- Card de upload -->
+                    <div class="card uml-upload-card">
+                        <div class="uml-upload-header">
+                            <div>
+                                <p class="card-title" style="margin-bottom:4px;">
+                                    <span id="uml-upload-label">Adicionar Diagrama de Caso de Uso</span>
+                                </p>
+                                <p style="font-size:.8rem;color:var(--sub);">PNG, JPG, SVG, GIF ou WebP — máx. 10 MB</p>
+                            </div>
+                            <span class="uml-type-badge" id="uml-type-badge">Caso de Uso</span>
+                        </div>
+
+                        <!-- Dropzone -->
+                        <div class="uml-dropzone" id="uml-dropzone">
+                            <input type="file" id="uml-file-input"
+                                   accept="image/png,image/jpeg,image/svg+xml,image/gif,image/webp"
+                                   style="display:none;">
+                            <div class="uml-dropzone-inner" onclick="document.getElementById('uml-file-input').click()">
+                                <div class="uml-dropzone-icon">
+                                    <i class="fas fa-cloud-arrow-up"></i>
+                                </div>
+                                <p class="uml-dropzone-text">
+                                    <strong>Clique para selecionar</strong> ou arraste a imagem aqui
+                                </p>
+                                <p class="uml-dropzone-hint">PNG · JPG · SVG · GIF · WebP — máx. 10 MB</p>
+                            </div>
+                        </div>
+
+                        <!-- Preview da imagem selecionada (oculto por padrão) -->
+                        <div id="uml-preview-wrap" style="display:none;">
+                            <div class="uml-preview-box">
+                                <img id="uml-preview-img" src="" alt="Preview do diagrama">
+                            </div>
+                            <div class="uml-preview-actions">
+                                <div>
+                                    <p class="uml-preview-filename" id="uml-preview-filename">–</p>
+                                    <p class="uml-preview-size"    id="uml-preview-size">–</p>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-secondary" onclick="umlCancelarPreview()">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button class="btn btn-primary" onclick="umlSalvarDiagrama()">
+                                        <i class="fas fa-check"></i> Confirmar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Galeria -->
+                    <div class="card">
+                        <div class="uml-upload-header">
+                            <p class="card-title">
+                                <i class="fas fa-images"></i>
+                                <span id="uml-gallery-label">Diagramas de Caso de Uso</span>
+                                <span class="uml-count-badge" id="uml-count-badge">0</span>
+                            </p>
+                        </div>
+                        <div id="uml-gallery-empty" class="empty-state" style="display:none;">
+                            <i class="fas fa-image"></i>
+                            <p>Nenhum diagrama adicionado ainda.</p>
+                        </div>
+                        <div class="uml-gallery" id="uml-gallery"></div>
+                    </div>
+
+                </div><!-- /uml-panel -->
+
             </section>
 
             <!-- ── RELATÓRIOS ────────────────────── -->
