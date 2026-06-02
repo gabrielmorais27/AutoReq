@@ -376,8 +376,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!Array.isArray(projs)) return;
             const options = '<option value="">Selecione um projeto...</option>' +
                 projs.map(p => `<option value="${p.id}">${escHtml(p.nome)}</option>`).join('');
-            ['req-projeto-vinculo', 'uml-projeto-select', 'relatorio-projeto-select']
+
+            // Selects comuns
+            ['req-projeto-vinculo', 'relatorio-projeto-select']
                 .forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = options; });
+
+            // Select UML: preserva seleção anterior e notifica o módulo
+            const umlSel = document.getElementById('uml-projeto-select');
+            if (umlSel) {
+                const prevVal = umlSel.value;
+                umlSel.innerHTML = '<option value="">Escolha um projeto para gerenciar diagramas...</option>' +
+                    projs.map(p => `<option value="${p.id}">${escHtml(p.nome)}</option>`).join('');
+                if (prevVal && umlSel.querySelector(`option[value="${prevVal}"]`)) {
+                    umlSel.value = prevVal;
+                }
+                // Notifica o módulo UML com o valor atual (seja preservado ou vazio)
+                if (typeof window.umlSetProjeto === 'function') {
+                    window.umlSetProjeto(umlSel.value);
+                }
+            }
         } catch (err) { console.error('atualizarSelectsProjetos:', err); }
     }
 
@@ -1118,22 +1135,285 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // ── Integração não-destrutiva com #uml-projeto-select ─────────────
-        // Registra um SEGUNDO listener no mesmo elemento (o original da linha
-        // 316 permanece intacto). Limpa os anexos ao trocar de projeto para
-        // evitar mistura de diagramas de contextos diferentes.
-        const umlSelect = document.getElementById('uml-projeto-select');
-        if (umlSelect) {
-            umlSelect.addEventListener('change', function _diagramsClearOnProjectChange() {
-                if (_diagramStore.length === 0) return;
-                _diagramStore.forEach(d => { if (d.objectUrl) URL.revokeObjectURL(d.objectUrl); });
-                _diagramStore.length = 0;
-                _list()?.querySelectorAll('.diagram-item').forEach(el => el.remove());
-                _syncEmptyState();
+    })(); // /MÓDULO ANEXAR DIAGRAMAS EXTERNOS
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MÓDULO UML — gerenciador simples de diagramas por projeto/tipo
+    // ═══════════════════════════════════════════════════════════════════════
+    const _uml = {
+        projeto: null,
+        tipo: 'caso_uso',
+        arquivo: null,          // { file, objectUrl }
+        store: {},              // chave: "projId|tipo" → Array<entry>
+    };
+
+    const _UML_META = {
+        caso_uso:  { label: 'Caso de Uso',  badge: '',                uploadLabel: 'Adicionar Diagrama de Caso de Uso', galleryLabel: 'Diagramas de Caso de Uso'  },
+        classe:    { label: 'Classe',        badge: 'badge-classe',    uploadLabel: 'Adicionar Diagrama de Classe',       galleryLabel: 'Diagramas de Classe'        },
+        sequencia: { label: 'Sequência',     badge: 'badge-sequencia', uploadLabel: 'Adicionar Diagrama de Sequência',   galleryLabel: 'Diagramas de Sequência'    },
+    };
+
+    function _umlKey(proj, tipo) { return `${proj}|${tipo}`; }
+    function _umlList(proj, tipo) {
+        const k = _umlKey(proj, tipo);
+        if (!_uml.store[k]) _uml.store[k] = [];
+        return _uml.store[k];
+    }
+    function _umlUID() { return `u${Date.now()}${Math.random().toString(36).slice(2,5)}`; }
+    function _umlFmtSize(b) {
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+        return (b/1048576).toFixed(2) + ' MB';
+    }
+
+    // Atualiza galeria conforme projeto+tipo atual
+    function _umlRender() {
+        const gallery = document.getElementById('uml-gallery');
+        const empty   = document.getElementById('uml-gallery-empty');
+        const count   = document.getElementById('uml-count-badge');
+        const label   = document.getElementById('uml-gallery-label');
+        if (!gallery) return;
+
+        const lista = _umlList(_uml.projeto, _uml.tipo);
+        if (label) label.textContent = _UML_META[_uml.tipo].galleryLabel;
+        if (count) count.textContent = lista.length;
+        gallery.innerHTML = '';
+
+        if (!lista.length) {
+            if (empty) empty.style.display = '';
+            return;
+        }
+        if (empty) empty.style.display = 'none';
+
+        lista.forEach(entry => {
+            const card = document.createElement('div');
+            card.className = 'uml-card';
+            card.innerHTML = `
+                <div class="uml-card-thumb" onclick="_umlVer('${entry.id}')">
+                    <img src="${entry.url}" alt="${escHtml(entry.nome)}" loading="lazy">
+                </div>
+                <div class="uml-card-body">
+                    <div class="uml-card-name" title="${escHtml(entry.nome)}">${escHtml(entry.nome)}</div>
+                    <div class="uml-card-actions">
+                        <button class="btn btn-sm btn-info"      title="Expandir"  onclick="_umlVer('${entry.id}')"><i class="fas fa-expand"></i></button>
+                        <button class="btn btn-sm btn-secondary" title="Baixar"    onclick="_umlBaixar('${entry.id}')"><i class="fas fa-download"></i></button>
+                        <button class="btn btn-sm btn-danger"    title="Remover"   onclick="_umlRemover('${entry.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            gallery.appendChild(card);
+        });
+    }
+
+    // Selecionar projeto (chamado pelo select e por atualizarSelectsProjetos)
+    window.umlSetProjeto = function(val) {
+        _uml.projeto = val || null;
+        const panel  = document.getElementById('uml-panel');
+        const estado = document.getElementById('uml-empty-state');
+        if (panel)  panel.style.display  = val ? '' : 'none';
+        if (estado) estado.style.display = val ? 'none' : '';
+        if (val) {
+            umlCancelarPreview();
+            _umlCarregarDoBanco(val, _uml.tipo); // carrega do banco ao selecionar projeto
+            _umlRender();
+        }
+    };
+
+    // Trocar tipo de diagrama
+    window.umlSelecionarTipo = function(tipo) {
+        _uml.tipo = tipo;
+        if (_uml.projeto) _umlCarregarDoBanco(_uml.projeto, tipo);
+        const meta = _UML_META[tipo];
+        document.querySelectorAll('.uml-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tipo === tipo));
+        const lbl = document.getElementById('uml-upload-label');
+        if (lbl) lbl.textContent = meta.uploadLabel;
+        const bdg = document.getElementById('uml-type-badge');
+        if (bdg) { bdg.textContent = meta.label; bdg.className = 'uml-type-badge ' + meta.badge; }
+        umlCancelarPreview();
+        _umlRender();
+    };
+
+    // Listener do select de projeto
+    const _umlSel = document.getElementById('uml-projeto-select');
+    if (_umlSel) {
+        _umlSel.addEventListener('change', function() { window.umlSetProjeto(this.value); });
+    }
+
+    // File input
+    const _umlFileInput = document.getElementById('uml-file-input');
+    if (_umlFileInput) {
+        _umlFileInput.addEventListener('change', function() {
+            if (this.files[0]) _umlProcessar(this.files[0]);
+            this.value = '';
+        });
+    }
+
+    // Drag-and-drop
+    const _umlDz = document.getElementById('uml-dropzone');
+    if (_umlDz) {
+        _umlDz.addEventListener('dragover',  e => { e.preventDefault(); _umlDz.classList.add('drag-over'); });
+        _umlDz.addEventListener('dragleave', e => { if (!_umlDz.contains(e.relatedTarget)) _umlDz.classList.remove('drag-over'); });
+        _umlDz.addEventListener('drop', e => {
+            e.preventDefault(); _umlDz.classList.remove('drag-over');
+            if (e.dataTransfer.files[0]) _umlProcessar(e.dataTransfer.files[0]);
+        });
+    }
+
+    // Processar arquivo selecionado → mostrar preview
+    function _umlProcessar(file) {
+        if (!_uml.projeto) { toast('Selecione um projeto antes de adicionar um diagrama.', 'error'); return; }
+        const MIME = new Set(['image/png','image/jpeg','image/svg+xml','image/gif','image/webp']);
+        if (!MIME.has(file.type)) { toast('Tipo não permitido. Use PNG, JPG, SVG, GIF ou WebP.', 'error'); return; }
+        if (file.size > 10*1024*1024) { toast('Arquivo excede 10 MB.', 'error'); return; }
+
+        if (_uml.arquivo?.url) URL.revokeObjectURL(_uml.arquivo.url);
+        _uml.arquivo = { file, url: URL.createObjectURL(file) };
+
+        const dz   = document.getElementById('uml-dropzone');
+        const prev = document.getElementById('uml-preview-wrap');
+        if (dz)   dz.style.display   = 'none';
+        if (prev) prev.style.display = '';
+
+        const img  = document.getElementById('uml-preview-img');
+        const fname = document.getElementById('uml-preview-filename');
+        const fsize = document.getElementById('uml-preview-size');
+        if (img)   img.src             = _uml.arquivo.url;
+        if (fname) fname.textContent   = file.name;
+        if (fsize) fsize.textContent   = _umlFmtSize(file.size);
+    }
+
+    // Cancelar preview
+    window.umlCancelarPreview = function() {
+        if (_uml.arquivo?.url) URL.revokeObjectURL(_uml.arquivo.url);
+        _uml.arquivo = null;
+        const dz   = document.getElementById('uml-dropzone');
+        const prev = document.getElementById('uml-preview-wrap');
+        if (dz)   dz.style.display   = '';
+        if (prev) prev.style.display = 'none';
+    };
+
+    // Confirmar e salvar na galeria — persiste no banco via API
+    window.umlSalvarDiagrama = async function() {
+        if (!_uml.arquivo || !_uml.projeto) return;
+
+        const btnSalvar = document.getElementById('uml-btn-salvar');
+        if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...'; }
+
+        try {
+            const fd = new FormData();
+            fd.append('diagram',       _uml.arquivo.file);
+            fd.append('usuario_id',    currentUser?.id ?? 0);
+            fd.append('projeto_id',    _uml.projeto);
+            fd.append('tipo_diagrama', _uml.tipo);
+
+            const resp = await fetch(`${API}?action=upload_diagram`, { method: 'POST', body: fd });
+            const data = await resp.json();
+
+            if (data.error) {
+                toast('Erro ao salvar: ' + data.error, 'error');
+                return;
+            }
+
+            // Adiciona à galeria com a URL do servidor (persistente)
+            const lista = _umlList(_uml.projeto, _uml.tipo);
+            lista.push({
+                id:       String(data.id ?? _umlUID()),
+                dbId:     data.id ?? null,
+                nome:     _uml.arquivo.file.name,
+                url:      data.url,
+                fromDB:   true,
             });
+
+            if (data.warning) toast(data.warning, 'error');
+            else toast('Diagrama de ' + _UML_META[_uml.tipo].label + ' salvo!');
+
+        } catch (err) {
+            toast('Erro de conexão ao salvar diagrama.', 'error');
+            console.error('umlSalvarDiagrama:', err);
+        } finally {
+            // Revoga a URL temporária e limpa preview
+            if (_uml.arquivo?.url) URL.revokeObjectURL(_uml.arquivo.url);
+            _uml.arquivo = null;
+            const dz   = document.getElementById('uml-dropzone');
+            const prev = document.getElementById('uml-preview-wrap');
+            if (dz)   dz.style.display   = '';
+            if (prev) prev.style.display = 'none';
+            if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.innerHTML = '<i class="fas fa-check"></i> Salvar'; }
+            _umlRender();
+        }
+    };
+
+    // Carrega diagramas do banco para o projeto/tipo selecionado
+    async function _umlCarregarDoBanco(projetoId, tipo) {
+        if (!projetoId || !currentUser?.id) return;
+        try {
+            const url  = `${API}?tipo=diagrams&usuario_id=${currentUser.id}&projeto_id=${projetoId}&tipo_diagrama=${tipo}`;
+            const resp = await fetch(url);
+            const rows = await resp.json();
+            if (!Array.isArray(rows)) return;
+
+            const lista = _umlList(projetoId, tipo);
+            // Evita duplicatas: só adiciona IDs que ainda não existem na lista
+            const idsExistentes = new Set(lista.map(e => String(e.dbId)));
+            rows.forEach(row => {
+                if (!idsExistentes.has(String(row.id))) {
+                    lista.push({
+                        id:     String(row.id),
+                        dbId:   row.id,
+                        nome:   row.arquivo_original,
+                        url:    row.url,
+                        fromDB: true,
+                    });
+                }
+            });
+            _umlRender();
+        } catch (err) {
+            console.warn('_umlCarregarDoBanco:', err);
+        }
+    }
+
+    // Ver imagem em tela cheia
+    window._umlVer = function(id) {
+        const entry = Object.values(_uml.store).flat().find(e => e.id === id);
+        if (!entry) return;
+        mostrarModal(`
+            <h3><i class="fas fa-image" style="color:var(--primary);margin-right:8px;"></i>${escHtml(entry.nome)}</h3>
+            <div style="margin:16px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);">
+                <img src="${entry.url}" alt="${escHtml(entry.nome)}" style="width:100%;max-height:70vh;object-fit:contain;display:block;">
+            </div>
+            <div class="btn-group" style="justify-content:flex-end;">
+                <button class="btn btn-secondary" onclick="fecharModal()"><i class="fas fa-times"></i> Fechar</button>
+                <button class="btn btn-primary" onclick="_umlBaixar('${id}');fecharModal()"><i class="fas fa-download"></i> Baixar</button>
+            </div>`);
+    };
+
+    window._umlBaixar = function(id) {
+        const entry = Object.values(_uml.store).flat().find(e => e.id === id);
+        if (!entry) return;
+        const a = document.createElement('a');
+        a.href = entry.url; a.download = entry.nome; a.click();
+    };
+
+    window._umlRemover = function(id) {
+        const k = _umlKey(_uml.projeto, _uml.tipo);
+        const lista = _uml.store[k] || [];
+        const idx = lista.findIndex(e => e.id === id);
+        if (idx === -1) return;
+
+        const entry = lista[idx];
+
+        // Se veio do banco, deleta via API
+        if (entry.fromDB && entry.dbId && currentUser?.id) {
+            fetch(`${API}?action=diagrama&id=${entry.dbId}&usuario_id=${currentUser.id}`, { method: 'DELETE' })
+                .catch(err => console.warn('Erro ao deletar diagrama do banco:', err));
         }
 
-    })(); // /MÓDULO ANEXAR DIAGRAMAS EXTERNOS
+        // Remove URL temporária se houver
+        if (!entry.fromDB && entry.url) URL.revokeObjectURL(entry.url);
+        lista.splice(idx, 1);
+        toast('Diagrama removido.');
+        _umlRender();
+    };
+    // /MÓDULO UML
 
     // ─── MÓDULO: CONFIGURAÇÕES DA CONTA ──────────────────────────────────
     (function() {
