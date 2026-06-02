@@ -1224,3 +1224,294 @@ code {
     margin: 4px 6px;
 }
 /* /PROFILE DROPDOWN */
+
+/* ══════════════════════════════════════════════════════════════════════════
+   UML DIAGRAMS MODULE
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Seletor de projeto */
+.uml-project-selector {
+    padding: 16px 24px;
+    margin-bottom: 20px;
+}
+.uml-selector-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+}
+.uml-selector-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: grid;
+    place-items: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-bottom: 0;
+    align-self: flex-end;
+}
+
+/* Tabs de tipo de diagrama */
+.uml-type-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.uml-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    background: var(--white);
+    color: var(--sub);
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    flex: 1;
+    justify-content: center;
+    min-width: 140px;
+    box-shadow: var(--shadow);
+}
+.uml-tab-btn i {
+    font-size: 1rem;
+    transition: transform var(--transition);
+}
+.uml-tab-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+.uml-tab-btn.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(37,99,235,.3);
+    transform: translateY(-1px);
+}
+.uml-tab-btn.active i {
+    transform: scale(1.1);
+}
+
+/* Card de upload */
+.uml-upload-card {
+    margin-bottom: 20px;
+}
+.uml-upload-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Badge do tipo de diagrama */
+.uml-type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    background: var(--primary);
+    color: #fff;
+    transition: background var(--transition);
+}
+.uml-type-badge.badge-classe    { background: #7c3aed; }
+.uml-type-badge.badge-sequencia { background: #0891b2; }
+
+/* Dropzone */
+.uml-dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    transition: border-color var(--transition), background var(--transition);
+    overflow: hidden;
+}
+.uml-dropzone.drag-over {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.uml-dropzone-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 40px 24px;
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition);
+}
+.uml-dropzone-inner:hover {
+    background: #f1f5f9;
+}
+.uml-dropzone-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: grid;
+    place-items: center;
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+    transition: transform var(--transition);
+}
+.uml-dropzone-inner:hover .uml-dropzone-icon {
+    transform: scale(1.08);
+}
+.uml-dropzone-text {
+    font-size: 0.9rem;
+    color: var(--text);
+    font-weight: 500;
+}
+.uml-dropzone-text strong {
+    color: var(--primary);
+}
+.uml-dropzone-hint {
+    font-size: 0.75rem;
+    color: var(--sub);
+}
+
+/* Preview de imagem selecionada */
+.uml-preview-box {
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    max-height: 340px;
+    margin-bottom: 14px;
+}
+.uml-preview-box img {
+    max-width: 100%;
+    max-height: 340px;
+    object-fit: contain;
+    display: block;
+}
+.uml-preview-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.uml-preview-filename {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+.uml-preview-size {
+    font-size: 0.75rem;
+    color: var(--sub);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Galeria de diagramas */
+.uml-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    min-height: 80px;
+}
+
+.uml-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--white);
+    box-shadow: var(--shadow);
+    transition: transform var(--transition), box-shadow var(--transition);
+    animation: fadeIn .25s ease;
+    cursor: default;
+}
+.uml-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+.uml-card-thumb {
+    height: 160px;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+    cursor: zoom-in;
+}
+.uml-card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform .3s ease;
+}
+.uml-card:hover .uml-card-thumb img {
+    transform: scale(1.04);
+}
+.uml-card-body {
+    padding: 10px 12px;
+}
+.uml-card-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 6px;
+}
+.uml-card-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+/* Badge contador */
+.uml-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 99px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-left: 4px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .uml-type-tabs { gap: 8px; }
+    .uml-tab-btn { padding: 10px 14px; font-size: 0.82rem; min-width: 110px; }
+    .uml-gallery { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .uml-dropzone-inner { padding: 28px 16px; }
+    .uml-selector-row { flex-direction: column; align-items: stretch; }
+    .uml-selector-icon { display: none; }
+    .uml-upload-header { flex-direction: column; align-items: flex-start; }
+    .uml-preview-actions { flex-direction: column; align-items: flex-start; }
+}
+
+/* /UML DIAGRAMS MODULE */
