@@ -1,0 +1,76 @@
+-- ─── BANCO DE DADOS ───────────────────────────────────────────────────────────
+CREATE DATABASE IF NOT EXISTS autoreq
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE autoreq;
+
+-- ─── TABELA: usuarios ─────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS usuarios (
+  id            INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+  nome          VARCHAR(150)    NOT NULL,
+  email         VARCHAR(255)    NOT NULL UNIQUE,
+  senha         VARCHAR(255)    NOT NULL,
+  papel         ENUM('admin','usuario') NOT NULL DEFAULT 'usuario',
+  criado_em     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─── TABELA: projetos ─────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS projetos (
+  id            INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+  usuario_id    INT UNSIGNED    NOT NULL,
+  nome          VARCHAR(255)    NOT NULL,
+  cliente       VARCHAR(255)         NULL DEFAULT NULL,
+  status        VARCHAR(50)     NOT NULL DEFAULT 'Planejamento',
+  descricao     TEXT                 NULL,
+  data_criacao  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_projetos_usuario
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─── TABELA: requisitos ───────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS requisitos (
+  id            INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+  projeto_id    INT UNSIGNED    NOT NULL,
+  codigo        VARCHAR(50)          NULL DEFAULT NULL,
+  tipo          ENUM('RF','RNF')NOT NULL DEFAULT 'RF',
+  titulo        VARCHAR(255)    NOT NULL,
+  descricao     TEXT                 NULL,
+  prioridade    ENUM('Alta','Média','Baixa') NOT NULL DEFAULT 'Média',
+  status        ENUM('Pendente','Aprovado','Revisão') NOT NULL DEFAULT 'Pendente',
+  justificativa TEXT                 NULL,
+  data_criacao  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_requisitos_projeto
+    FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─── TABELA: comentarios ──────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS comentarios (
+  id            INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+  requisito_id  INT UNSIGNED    NOT NULL,
+  usuario_id    INT UNSIGNED         NULL DEFAULT NULL,
+  texto         TEXT            NOT NULL,
+  criado_em     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_comentarios_requisito
+    FOREIGN KEY (requisito_id) REFERENCES requisitos(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ─── TABELA: diagrams_externos ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS diagrams_externos (
+  id                INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+  usuario_id        INT UNSIGNED    NOT NULL,
+  projeto_id        INT UNSIGNED         NULL DEFAULT NULL,
+  arquivo_original  VARCHAR(500)    NOT NULL,
+  arquivo_servidor  VARCHAR(500)    NOT NULL,
+  tamanho_bytes     INT UNSIGNED    NOT NULL DEFAULT 0,
+  criado_em         DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_diagrams_usuario
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  CONSTRAINT fk_diagrams_projeto
+    FOREIGN KEY (projeto_id) REFERENCES projetos(id) ON DELETE SET NULL
+) ENG
